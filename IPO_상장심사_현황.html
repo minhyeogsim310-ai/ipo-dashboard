@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026 IPO 상장심사 현황</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+    background: #0f1a2e;
+    color: #e0e8f0;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* 헤더 */
+  .header {
+    background: #0f1a2e;
+    border-bottom: 1px solid #1e3a5f;
+    padding: 20px 32px 16px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+  .header-brand {
+    font-size: 11px;
+    color: #7fa8c9;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .header-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #ffffff;
+  }
+  .header-title span {
+    color: #4db8ff;
+  }
+  .header-date {
+    text-align: right;
+    font-size: 11px;
+    color: #7fa8c9;
+  }
+  .header-date-val {
+    font-size: 13px;
+    color: #b0cde6;
+    margin-top: 2px;
+  }
+
+  /* KPI 카드 */
+  .kpi-row {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid #1e3a5f;
+  }
+  .kpi-card {
+    flex: 1;
+    padding: 20px 28px;
+    border-right: 1px solid #1e3a5f;
+    position: relative;
+  }
+  .kpi-card:last-child { border-right: none; }
+  .kpi-label {
+    font-size: 11px;
+    color: #7fa8c9;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+  .kpi-value {
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .kpi-unit {
+    font-size: 14px;
+    font-weight: 400;
+    margin-left: 2px;
+  }
+  .kpi-total   .kpi-value { color: #e0e8f0; }
+  .kpi-approved .kpi-value { color: #3dd68c; }
+  .kpi-progress .kpi-value { color: #4db8ff; }
+  .kpi-withdrawn .kpi-value { color: #ff6b6b; }
+
+  /* 필터/검색 바 */
+  .toolbar {
+    background: #0d1829;
+    padding: 12px 32px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #1e3a5f;
+  }
+  .toolbar input {
+    background: #1a2d47;
+    border: 1px solid #2a4a6e;
+    color: #e0e8f0;
+    padding: 7px 14px;
+    border-radius: 4px;
+    font-size: 13px;
+    width: 220px;
+    outline: none;
+  }
+  .toolbar input::placeholder { color: #5a7a9a; }
+  .toolbar select {
+    background: #1a2d47;
+    border: 1px solid #2a4a6e;
+    color: #e0e8f0;
+    padding: 7px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+  }
+  .toolbar-label {
+    font-size: 12px;
+    color: #7fa8c9;
+  }
+  .count-label {
+    margin-left: auto;
+    font-size: 12px;
+    color: #7fa8c9;
+  }
+  #filtered-count { color: #4db8ff; font-weight: 600; }
+
+  /* 테이블 */
+  .table-wrap {
+    overflow-x: auto;
+    padding: 0 32px 32px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 0;
+  }
+  thead tr {
+    background: #0d1829;
+    border-bottom: 2px solid #1e3a5f;
+  }
+  thead th {
+    padding: 12px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: #7fa8c9;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+  .col-no { width: 50px; text-align: center; }
+  .col-date { width: 100px; white-space: nowrap; }
+  tbody tr {
+    border-bottom: 1px solid #1a2d47;
+    transition: background 0.15s;
+  }
+  tbody tr:hover { background: #162236; }
+  tbody td {
+    padding: 10px 14px;
+    vertical-align: middle;
+    color: #c8dae8;
+  }
+  tbody td.col-no { text-align: center; color: #5a7a9a; font-size: 12px; }
+  tbody td.col-name { font-weight: 600; color: #e0e8f0; }
+  tbody td.col-underwriter { font-size: 12px; color: #9ab8d0; }
+
+  /* 뱃지 */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .badge-kosdaq { background: #1a3a5f; color: #4db8ff; }
+  .badge-kospi  { background: #1a3f2e; color: #3dd68c; }
+  .badge-konex  { background: #3a2a1a; color: #f0a040; }
+
+  .status-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .status-approved  { background: #0d3320; color: #3dd68c; border: 1px solid #2a7a50; }
+  .status-progress  { background: #0a2540; color: #4db8ff; border: 1px solid #1a4a80; }
+  .status-withdrawn { background: #3a1515; color: #ff6b6b; border: 1px solid #7a2a2a; }
+  .status-rejected  { background: #3a2010; color: #ff9940; border: 1px solid #7a4a10; }
+  .status-other     { background: #2a2a2a; color: #9ab8d0; border: 1px solid #4a4a4a; }
+
+  /* 범례 */
+  .legend {
+    padding: 10px 32px;
+    background: #0d1829;
+    border-bottom: 1px solid #1e3a5f;
+    display: flex;
+    gap: 20px;
+    font-size: 11px;
+    color: #7fa8c9;
+    align-items: center;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+
+  .no-data { text-align: center; padding: 60px; color: #5a7a9a; }
+
+  /* 수집 정보 */
+  .footer {
+    text-align: right;
+    padding: 10px 32px;
+    font-size: 11px;
+    color: #3a5a7a;
+  }
+</style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<div class="header">
+  <div>
+    <div class="header-brand">삼성투자연구소 · IPO PIPELINE</div>
+    <div class="header-title">2026 IPO <span>상장심사</span> 현황</div>
+  </div>
+  <div class="header-date">
+    <div>기준일</div>
+    <div class="header-date-val">2026.07.08</div>
+  </div>
+</div>
+
+<!-- KPI 카드 -->
+<div class="kpi-row">
+  <div class="kpi-card kpi-total">
+    <div class="kpi-label">전체 현황</div>
+    <div class="kpi-value">62<span class="kpi-unit">건</span></div>
+  </div>
+  <div class="kpi-card kpi-approved">
+    <div class="kpi-label">심사 승인</div>
+    <div class="kpi-value">14<span class="kpi-unit">건</span></div>
+  </div>
+  <div class="kpi-card kpi-progress">
+    <div class="kpi-label">심사 진행중</div>
+    <div class="kpi-value">45<span class="kpi-unit">건</span></div>
+  </div>
+  <div class="kpi-card kpi-withdrawn">
+    <div class="kpi-label">심사 철회</div>
+    <div class="kpi-value">3<span class="kpi-unit">건</span></div>
+  </div>
+</div>
+
+<!-- 범례 -->
+<div class="legend">
+  <span>● 심사결과 구분:</span>
+  <span class="legend-item"><span class="status-badge status-approved" style="padding:1px 7px;font-size:10px;">심사 승인</span></span>
+  <span class="legend-item"><span class="status-badge status-progress" style="padding:1px 7px;font-size:10px;">심사 진행중</span></span>
+  <span class="legend-item"><span class="status-badge status-withdrawn" style="padding:1px 7px;font-size:10px;">심사 철회</span></span>
+</div>
+
+<!-- 툴바 -->
+<div class="toolbar">
+  <span class="toolbar-label">검색</span>
+  <input type="text" id="search-input" placeholder="회사명, 상장주선인 검색...">
+  <select id="market-filter">
+    <option value="">전체 시장</option>
+    <option value="코스닥">코스닥</option>
+    <option value="코스피">코스피</option>
+    <option value="코넥스">코넥스</option>
+  </select>
+  <select id="status-filter">
+    <option value="">전체 심사결과</option>
+    <option value="진행중">심사 진행중</option>
+    <option value="승인">심사 승인</option>
+    <option value="철회">심사 철회</option>
+  </select>
+  <span class="count-label">표시: <span id="filtered-count">62</span>건</span>
+</div>
+
+<!-- 테이블 -->
+<div class="table-wrap">
+  <table id="main-table">
+    <thead>
+      <tr>
+        <th class="col-no">번호</th>
+        <th>회사명</th>
+        <th>시장</th>
+        <th>청구일</th>
+        <th>결과확정일</th>
+        <th>심사결과</th>
+        <th>상장주선인</th>
+      </tr>
+    </thead>
+    <tbody id="table-body">
+      
+        <tr>
+            <td class="col-no">1</td>
+            <td class="col-name">해치텍</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-03-23</td>
+            <td class="col-date">2026-06-24</td>
+            <td><span class="status-badge status-approved">심사 승인</span></td>
+            <td class="col-underwriter">DB증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">2</td>
+            <td class="col-name">한화플러스제6호스팩</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-06-12</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">한화투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">3</td>
+            <td class="col-name">한국제17호스팩</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-06-12</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">한국투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">4</td>
+            <td class="col-name">한국제16호스팩</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-03-20</td>
+            <td class="col-date">2026-05-20</td>
+            <td><span class="status-badge status-approved">심사 승인</span></td>
+            <td class="col-underwriter">한국투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">5</td>
+            <td class="col-name">하나에어로다이내믹스</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-05-29</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">IBK투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">6</td>
+            <td class="col-name">피지티</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-02-27</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">한국투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">7</td>
+            <td class="col-name">파워큐브세미</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-01-16</td>
+            <td class="col-date">2026-06-15</td>
+            <td><span class="status-badge status-withdrawn">심사 철회</span></td>
+            <td class="col-underwriter">하나증권,비엔케이투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">8</td>
+            <td class="col-name">티앤이코리아</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-06-17</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">신한투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">9</td>
+            <td class="col-name">텔레픽스</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-04-30</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">미래에셋증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">10</td>
+            <td class="col-name">크리에이츠</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-04-07</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">삼성증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">11</td>
+            <td class="col-name">케이엠에프</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-05-29</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">IBK투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">12</td>
+            <td class="col-name">케이앤에스아이앤씨</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-01-16</td>
+            <td class="col-date">2026-05-07</td>
+            <td><span class="status-badge status-approved">심사 승인</span></td>
+            <td class="col-underwriter">IBK투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">13</td>
+            <td class="col-name">케이솔루션</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-02-12</td>
+            <td class="col-date">2026-05-26</td>
+            <td><span class="status-badge status-withdrawn">심사 철회</span></td>
+            <td class="col-underwriter">DB증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">14</td>
+            <td class="col-name">케이비제34호스팩</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-06-12</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">KB증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">15</td>
+            <td class="col-name">진코스텍</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-07-06</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">하나증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">16</td>
+            <td class="col-name">제이피이노베이션</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-03-25</td>
+            <td class="col-date">2026-05-29</td>
+            <td><span class="status-badge status-withdrawn">심사 철회</span></td>
+            <td class="col-underwriter">삼성증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">17</td>
+            <td class="col-name">제이앤티지</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-06-11</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">대신증권,엔에이치투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">18</td>
+            <td class="col-name">인텔리빅스</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-03-24</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">미래에셋증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">19</td>
+            <td class="col-name">인터엑스</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-05-29</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">한국투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">20</td>
+            <td class="col-name">인제니아테라퓨틱스</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-01-30</td>
+            <td class="col-date">2026-05-21</td>
+            <td><span class="status-badge status-approved">심사 승인</span></td>
+            <td class="col-underwriter">삼성증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">21</td>
+            <td class="col-name">이에스티</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-06-19</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">대신증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">22</td>
+            <td class="col-name">유캐스트</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-05-29</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">유진투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">23</td>
+            <td class="col-name">와이즈플래닛컴퍼니</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-04-15</td>
+            <td class="col-date">2026-06-25</td>
+            <td><span class="status-badge status-approved">심사 승인</span></td>
+            <td class="col-underwriter">대신증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">24</td>
+            <td class="col-name">옵토닉스</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-04-08</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">한국투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">25</td>
+            <td class="col-name">오토핸즈</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-05-12</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">미래에셋증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">26</td>
+            <td class="col-name">영광</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-06-18</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">한국투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">27</td>
+            <td class="col-name">엠에스바이오</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-04-16</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">KB증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">28</td>
+            <td class="col-name">엠비디</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-04-10</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">하나증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">29</td>
+            <td class="col-name">엠디에스코리아</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-07-03</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">미래에셋증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">30</td>
+            <td class="col-name">엘리스그룹</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-05-19</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">미래에셋증권 ,삼성증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">31</td>
+            <td class="col-name">엔에이치스팩34호</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-05-29</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">엔에이치투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">32</td>
+            <td class="col-name">에프엠더블유</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-06-30</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">유진투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">33</td>
+            <td class="col-name">에이치엘지노믹스</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-04-03</td>
+            <td class="col-date">2026-06-15</td>
+            <td><span class="status-badge status-approved">심사 승인</span></td>
+            <td class="col-underwriter">KB증권,IBK투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">34</td>
+            <td class="col-name">에이엘로봇</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-05-22</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">대신증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">35</td>
+            <td class="col-name">에이엔에이치스트럭쳐</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-05-21</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">엔에이치투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">36</td>
+            <td class="col-name">에스케이증권제14호기업인수목적</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-06-12</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">SK증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">37</td>
+            <td class="col-name">아이알큐더스</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-06-19</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">DB증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">38</td>
+            <td class="col-name">아이벡스메디칼시스템즈</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-05-06</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">엔에이치투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">39</td>
+            <td class="col-name">씨엔티테크</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-06-11</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">한화투자증권,하나증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">40</td>
+            <td class="col-name">싸이몬</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-06-25</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">미래에셋증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">41</td>
+            <td class="col-name">스카이랩스</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-01-30</td>
+            <td class="col-date">2026-06-24</td>
+            <td><span class="status-badge status-approved">심사 승인</span></td>
+            <td class="col-underwriter">한국투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">42</td>
+            <td class="col-name">셀트릭스</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-06-30</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">IBK투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">43</td>
+            <td class="col-name">삼홍아크튜리온</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-05-28</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">삼성증권,미래에셋증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">44</td>
+            <td class="col-name">비앤비코리아</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-05-21</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">미래에셋증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">45</td>
+            <td class="col-name">브릴스</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-04-16</td>
+            <td class="col-date">2026-06-25</td>
+            <td><span class="status-badge status-approved">심사 승인</span></td>
+            <td class="col-underwriter">IBK투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">46</td>
+            <td class="col-name">바이다</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-06-23</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">엔에이치투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">47</td>
+            <td class="col-name">바로팜</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-04-30</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">미래에셋증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">48</td>
+            <td class="col-name">모비어스</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-04-30</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">미래에셋증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">49</td>
+            <td class="col-name">멜콘</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-04-30</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">대신증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">50</td>
+            <td class="col-name">메리츠제2호스팩</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-03-04</td>
+            <td class="col-date">2026-04-27</td>
+            <td><span class="status-badge status-approved">심사 승인</span></td>
+            <td class="col-underwriter">메리츠증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">51</td>
+            <td class="col-name">레메디</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-01-30</td>
+            <td class="col-date">2026-05-07</td>
+            <td><span class="status-badge status-approved">심사 승인</span></td>
+            <td class="col-underwriter">KB증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">52</td>
+            <td class="col-name">럭스코</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-06-19</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">IBK투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">53</td>
+            <td class="col-name">래블업</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-05-21</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">엔에이치투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">54</td>
+            <td class="col-name">딜리셔스</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-02-25</td>
+            <td class="col-date">2026-06-15</td>
+            <td><span class="status-badge status-approved">심사 승인</span></td>
+            <td class="col-underwriter">한국투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">55</td>
+            <td class="col-name">동승</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-06-30</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">엔에이치투자증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">56</td>
+            <td class="col-name">대신밸런스제20호스팩</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-01-23</td>
+            <td class="col-date">2026-03-30</td>
+            <td><span class="status-badge status-approved">심사 승인</span></td>
+            <td class="col-underwriter">대신증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">57</td>
+            <td class="col-name">다비오</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-05-28</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">대신증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">58</td>
+            <td class="col-name">니어스랩</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-03-23</td>
+            <td class="col-date">2026-06-24</td>
+            <td><span class="status-badge status-approved">심사 승인</span></td>
+            <td class="col-underwriter">삼성증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">59</td>
+            <td class="col-name">넥스트에어로스페이스</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-05-21</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">삼성증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">60</td>
+            <td class="col-name">네오사피엔스</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-04-22</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">대신증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">61</td>
+            <td class="col-name">기도산업</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-04-21</td>
+            <td class="col-date">2026-06-25</td>
+            <td><span class="status-badge status-approved">심사 승인</span></td>
+            <td class="col-underwriter">미래에셋증권</td>
+        </tr>
+        <tr>
+            <td class="col-no">62</td>
+            <td class="col-name">글로벌테크놀로지</td>
+            <td><span class="badge badge-kosdaq">코스닥</span></td>
+            <td class="col-date">2026-04-13</td>
+            <td class="col-date">—</td>
+            <td><span class="status-badge status-progress">심사 진행중</span></td>
+            <td class="col-underwriter">한국투자증권</td>
+        </tr>
+    </tbody>
+  </table>
+  <div id="no-data" class="no-data" style="display:none;">검색 결과가 없습니다.</div>
+</div>
+
+<div class="footer">출처: 한국거래소 KIND · 수집일시: 2026-07-08 11:34</div>
+
+<script>
+const rows = document.querySelectorAll('#table-body tr');
+const countEl = document.getElementById('filtered-count');
+const noData = document.getElementById('no-data');
+
+function applyFilter() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const mkt = document.getElementById('market-filter').value;
+  const sts = document.getElementById('status-filter').value;
+  let visible = 0;
+  rows.forEach(tr => {
+    const name = tr.querySelector('.col-name')?.textContent.toLowerCase() || '';
+    const underwriter = tr.querySelector('.col-underwriter')?.textContent.toLowerCase() || '';
+    const badge = tr.querySelector('.badge')?.textContent || '';
+    const statusBadge = tr.querySelector('.status-badge')?.dataset?.cat || '';
+    const statusText = tr.querySelector('.status-badge')?.textContent || '';
+
+    const matchQ = !q || name.includes(q) || underwriter.includes(q);
+    const matchMkt = !mkt || badge === mkt;
+    const matchSts = !sts || tr.dataset.cat === sts;
+
+    if (matchQ && matchMkt && matchSts) {
+      tr.style.display = '';
+      visible++;
+    } else {
+      tr.style.display = 'none';
+    }
+  });
+  countEl.textContent = visible;
+  noData.style.display = visible === 0 ? 'block' : 'none';
+}
+
+// data-cat 속성 설정 (필터용)
+rows.forEach(tr => {
+  const s = tr.querySelector('.status-badge');
+  if (s) {
+    if (s.classList.contains('status-approved')) tr.dataset.cat = '승인';
+    else if (s.classList.contains('status-progress')) tr.dataset.cat = '진행중';
+    else if (s.classList.contains('status-withdrawn')) tr.dataset.cat = '철회';
+    else tr.dataset.cat = '기타';
+  }
+});
+
+document.getElementById('search-input').addEventListener('input', applyFilter);
+document.getElementById('market-filter').addEventListener('change', applyFilter);
+document.getElementById('status-filter').addEventListener('change', applyFilter);
+</script>
+</body>
+</html>
