@@ -208,6 +208,8 @@ def build_html(rows):
         "철회":  ("row-out",  "sts-out",  "심사 철회"),
     }
 
+    rows = sorted(rows, key=lambda r: r["청구일"], reverse=True)
+
     tbody_html = ""
     for i, r in enumerate(rows, 1):
         cat = r["분류"]
@@ -407,6 +409,10 @@ def main():
 
     added, removed, changed = detect_changes(old_rows, new_rows)
 
+    # 기준일 갱신을 위해 HTML은 항상 재생성
+    html = build_html(new_rows)
+    HTML_FILE.write_text(html, encoding="utf-8")
+
     if added or removed or changed:
         print(f"\n변경 감지:")
         for r in added:
@@ -417,13 +423,11 @@ def main():
             print(f"  [변경] {c['before']['회사명']}: {c['before']['심사결과']} → {c['after']['심사결과']}")
 
         save_current(new_rows)
-        html = build_html(new_rows)
-        HTML_FILE.write_text(html, encoding="utf-8")
         print(f"\nindex.html 업데이트 완료 ({len(new_rows)}건)")
-        print("CHANGED=true")  # GitHub Actions에서 감지용
+        print("CHANGED=true")
     else:
-        print("\n변경사항 없음 — 업데이트 스킵")
-        print("CHANGED=false")
+        print(f"\n데이터 변경 없음 - 기준일만 갱신 ({len(new_rows)}건)")
+        print("CHANGED=true")
 
 
 if __name__ == "__main__":
